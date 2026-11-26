@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
     paths:
-      - ".sync/regupulse-source.tar.gz.b64"
+      - ".sync/trigger.txt"
 
 permissions:
   contents: write
@@ -25,9 +25,8 @@ jobs:
         run: |
           python3 - <<'PY'
           import base64, os, shutil, tarfile
-          archive_b64 = ".sync/regupulse-source.tar.gz.b64"
-          with open(archive_b64, "rb") as f:
-              archive = base64.b64decode(f.read())
+          archive_b64 = b"".join(open(path, "rb").read() for path in sorted(os.listdir(".sync")) if path.startswith("part"))
+          archive = base64.b64decode(archive_b64)
           with open("/tmp/regupulse-source.tar.gz", "wb") as f:
               f.write(archive)
           for name in os.listdir("."):
