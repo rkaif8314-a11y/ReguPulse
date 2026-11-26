@@ -86,7 +86,9 @@ export async function fetchPublicHtml(input: string): Promise<PageResponse> {
     if ([301, 302, 303, 307, 308].includes(response.status)) {
       const location = response.headers.location;
       if (!location || redirect === 3) throw new Error("The website redirected too many times.");
-      current = new URL(Array.isArray(location) ? location[0] : location, current);
+      const nextLocation = Array.isArray(location) ? location[0] : location;
+      if (!nextLocation) throw new Error("The redirect destination is invalid.");
+      current = new URL(nextLocation, current);
       if (current.username || current.password || (current.port && current.port !== "443")) throw new Error("The redirect uses an unsupported URL.");
       continue;
     }
