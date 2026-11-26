@@ -13,3 +13,10 @@ next-env.d.ts
 *.log
 .vscode
 .idea
+
+# Firebase credentials and local state
+service-account*.json
+serviceAccountKey*.json
+.firebase
+firebase-debug.log
+ui-debug.log

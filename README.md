@@ -1,60 +1,66 @@
 # ReguPulse
 
-A practical website compliance workbench for founders, small teams and agencies. ReguPulse runs deterministic checks for accessibility, privacy disclosures, cookie transparency and baseline web security. Its checks are practical signals and do not claim to certify legal compliance.
+ReguPulse is a full-stack website review workbench for accessibility, privacy, security and general website quality. It uses deterministic DOM, response-header and source-file checks.
 
-## Product
+## Product functionality
 
-- URL-based website checks with a server-side HTML fetcher.
-- Accessibility review: document language, image alternative text, form labels and meaningful links.
-- Privacy and cookie transparency checks.
-- Baseline security-header checks.
-- Clear findings with severity, recommendations and a weighted readiness score.
-- Guest workspaces with launch credits.
-- Browser-local scan history when cloud storage is not configured; Supabase persistence when configured.
-- India-first monthly plans: Starter ₹199, Growth ₹499 and Agency ₹1,499.
-- Razorpay recurring-subscription endpoints and signed webhook handling.
+- **30 website checks** across accessibility, privacy, security and general page quality.
+- Detailed reports with an overall score, four pillar scores, severity, rule references, affected page snippets, why each finding matters, a recommended change and manual verification steps.
+- Report pages can be opened from the workspace, printed or saved as PDF through the browser print dialogue, and downloaded as JSON.
+- **Source-file inspector** for HTML, CSS, JavaScript, TypeScript, JSON, Markdown and TXT files up to 2 MB. It reports line-level evidence, recommendations, verification steps and suggested rewrites. This tool costs 5 credits.
+- A URL scan costs 1 credit. Failed cloud scans return the credit.
+- Guest workspaces; no login or sign-up is required at this stage. A private HTTP-only browser cookie identifies the workspace.
+- Firebase Admin + Cloud Firestore for private report history, credits, file-review history and monitored sites. If Firebase credentials are not configured, the website and scanner use browser-local preview mode.
+- India-first monthly plans through Razorpay: Starter ₹199, Growth ₹499 and Agency ₹1,499.
+- Optional weekly reviews for saved websites using Vercel Cron.
 
-The first workspace in a fresh Supabase deployment receives 100 credits. Each later workspace receives 50 credits. One completed scan consumes one credit. Paid plan allowances are replenished on successful subscription charges.
+## Launch credits and plans
 
-## Authentication status
+The first workspace created in a new Firestore database receives 100 launch credits. Each later workspace receives 50 credits. Paid monthly allowances are Starter 150, Growth 600 and Agency 2,500 credits per billing cycle. A scan costs one credit; a source-file inspection costs five credits.
 
-Authentication is intentionally deferred. This build uses a private HTTP-only guest workspace cookie and does not ask visitors to create an account. A guest cookie is not a substitute for account authentication or enterprise identity controls.
+## Local development
 
-## Local setup
+Requirements: Node.js 20.9 or newer.
 
-1. Install Node.js 20.9 or newer.
-2. Run npm install.
-3. Copy .env.example to .env.local.
-4. Run npm run dev.
-5. Open http://localhost:3000.
+```bash
+npm install
+cp .env.example .env.local
+npm run dev
+```
 
-The scanner and pricing pages work without external credentials. Without Supabase, scans and credits use browser-local preview mode. Add Supabase credentials and run the SQL migration to enable shared cloud storage and server-managed credits.
+Open `http://localhost:3000`. Without cloud credentials, the site uses local browser credits and local report history. Cloud saving and paid checkout require the setup below.
 
-## Supabase setup
+## Firebase / Firestore setup
 
-1. Create a Supabase project.
-2. Add NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY and a strong GUEST_HASH_SECRET to your local environment and Vercel.
-3. Run supabase/migrations/20261127000000_initial_schema.sql in the Supabase SQL Editor.
-4. Confirm /api/health reports database storage as configured.
+1. Create a Firebase project and enable Cloud Firestore.
+2. Create a server service-account credential in Firebase Project Settings → Service Accounts. Do not enable Firebase Authentication for this version; login has intentionally been deferred.
+3. Add these server-only variables to `.env.local` and Vercel: `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`.
+4. Deploy the security rules and indexes:
 
-The service role key is server-only. It must never be placed in a NEXT_PUBLIC_ variable or committed to Git.
+```bash
+npx firebase-tools deploy --only firestore:rules,firestore:indexes
+```
 
-## Razorpay setup
+The Firestore rules deny direct browser access to every collection. The Next.js server uses Firebase Admin to scope each scan and file review to the private guest workspace. Never put the service-account private key in a `NEXT_PUBLIC_` variable or commit it to Git.
 
-Create monthly subscription plans in the Razorpay Dashboard with these exact amounts: ₹199, ₹499 and ₹1,499. Add the corresponding plan IDs and test/live credentials to your environment variables. Configure a webhook at /api/billing/webhook and subscribe to subscription.activated, subscription.charged, subscription.cancelled and subscription.halted.
+Collections created by the app include `guest_workspaces`, `system`, `scans`, `file_reviews` and `monitored_sites`.
 
-Checkout stays disabled until Supabase and the Razorpay plan IDs are configured. Test the full subscription lifecycle in Razorpay test mode before accepting live payments.
+## Razorpay subscriptions
 
-## Deployment
+1. Create three monthly subscription plans in the Razorpay Dashboard with amounts ₹199, ₹499 and ₹1,499.
+2. Add `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`, `RAZORPAY_PLAN_STARTER`, `RAZORPAY_PLAN_GROWTH` and `RAZORPAY_PLAN_AGENCY` to the environment.
+3. Add a Razorpay webhook endpoint at `/api/webhooks/razorpay` and enable `subscription.activated`, `subscription.charged`, `subscription.cancelled` and `subscription.halted`.
+4. Test the full subscription lifecycle in Razorpay test mode before accepting live payments.
 
-The repository is configured for Next.js on Vercel. Connect this GitHub repository to a Vercel project and deploy the main branch. Add environment variables in Vercel before enabling cloud credits or payments.
+The application does not contain real payment keys or plan IDs. Checkout remains safely disabled until the site owner supplies them.
 
-The retired static prototype was removed from the active app so the repository contains only the current product build.
+## Vercel deployment
 
-## Security and limitations
+Connect `rkaif8314-a11y/ReguPulse` as a Next.js project with the repository root as the root directory. Use `npm install` and `npm run build`. Add the Firebase Admin and Razorpay environment variables before turning on cloud credits and subscriptions. `vercel.json` configures a weekly review cron; add `CRON_SECRET` to production environment variables.
 
-- URL fetching is HTTPS-only, follows redirects manually, resolves DNS, rejects private/reserved IP ranges and pins the resolved addresses for outbound requests.
-- Responses are restricted to HTML and a bounded response size.
-- Checks are indicators, not legal advice, a penetration test, accessibility certification or a guarantee of GDPR, DPDP or WCAG compliance.
-- Anonymous workspaces are suitable for a launch preview. Add authentication, account recovery, stronger abuse controls, team permissions and formal retention policies before broad commercial launch.
-- Add monitoring, rate limits and operational alerting before production billing.
+## Important limitations
+
+- This is a static HTML/source and response-header review, not a full browser automation or authenticated application test. Client-rendered content, post-interaction requests and some runtime behaviour may not be visible.
+- A passing check is not a legal opinion, security audit, accessibility certification or guarantee of compliance.
+- Suggested file rewrites are deterministic templates; they do not overwrite the uploaded source. Review and test every suggestion before deploying it.
+- Guest workspaces are a launch-stage account model. Clearing browser cookies creates a new workspace. Authentication, account recovery and cross-device access can be added later.
