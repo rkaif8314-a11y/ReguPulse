@@ -1,6 +1,6 @@
 # ReguPulse
 
-A practical website compliance workbench for founders, small teams and agencies. ReguPulse runs deterministic checks for accessibility, privacy disclosures, cookie transparency and baseline web security. It does not use generative services and does not claim to certify legal compliance.
+A practical website compliance workbench for founders, small teams and agencies. ReguPulse runs deterministic checks for accessibility, privacy disclosures, cookie transparency and baseline web security. Its checks are practical signals and do not claim to certify legal compliance.
 
 ## Product
 
