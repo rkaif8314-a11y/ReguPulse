@@ -33,15 +33,14 @@ export function AuditWorkbench() {
       if (savedCredits) setCredits(Math.max(0, Number(savedCredits) || 0));
     } catch { /* Ignore malformed local preview data. */ }
 
-    fetch("/api/credits", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((data) => {
+    fetch("/api/credits", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then(async (data) => {
       if (data?.mode === "cloud") {
         setStorageMode("cloud"); setCredits(data.creditsRemaining); setFounder(Boolean(data.isFounder));
-      }
-    }).catch(() => undefined);
-
-    fetch("/api/scans", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((data) => {
-      if (Array.isArray(data?.scans) && data.scans.length) {
-        const saved = data.scans as HistoryItem[]; setHistory(saved); setResult(saved[0]);
+        const scansResponse = await fetch("/api/scans", { cache: "no-store" });
+        const scansData = scansResponse.ok ? await scansResponse.json() : null;
+        if (Array.isArray(scansData?.scans) && scansData.scans.length) {
+          const saved = scansData.scans as HistoryItem[]; setHistory(saved); setResult(saved[0]);
+        }
       }
     }).catch(() => undefined);
   }, []);
