@@ -1,10 +1,15 @@
-# OS files
+node_modules
+.next
+out
+build
+.vercel
+.env
+.env.*
+!.env.example
+*.tsbuildinfo
+next-env.d.ts
 .DS_Store
-Thumbs.db
-
-# Editor settings
-.vscode/
-.idea/
-
-# Logs
+*.pem
 *.log
+.vscode
+.idea
