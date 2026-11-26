@@ -14,7 +14,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Restore complete project tree
+      - name: Restore and patch complete project tree
         run: |
           set -euo pipefail
           cat .sync/source-part-* | base64 --decode > /tmp/regupulse-source.tar.xz
@@ -23,6 +23,16 @@ jobs:
           tar -xJf /tmp/regupulse-source.tar.xz -C /tmp/regupulse-expanded
           find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .sync ! -name .github -exec rm -rf {} +
           cp -a /tmp/regupulse-expanded/. .
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("lib/scanner/rules.ts")
+          source = path.read_text()
+          old = '$("h1").slice(0, 3).each((_, el) => bad.push(snippet($, el)));'
+          new = '$("h1").slice(0, 3).each((_, el) => { bad.push(snippet($, el)); });'
+          if old not in source:
+              raise SystemExit("Expected TypeScript callback expression not found")
+          path.write_text(source.replace(old, new, 1))
+          PY
           rm -rf .sync
           rm -f .github/workflows/apply-expanded-source.yml .github/workflows/restore-source.yml
       - name: Set up Node.js
