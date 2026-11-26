@@ -49,7 +49,7 @@ Checkout stays disabled until Supabase and the Razorpay plan IDs are configured.
 
 The repository is configured for Next.js on Vercel. Connect this GitHub repository to a Vercel project and deploy the main branch. Add environment variables in Vercel before enabling cloud credits or payments.
 
-The previous static prototype is preserved at /prototype.html.
+The retired static prototype was removed from the active app so the repository contains only the current product build.
 
 ## Security and limitations
 
